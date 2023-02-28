@@ -6,19 +6,18 @@ import com.example.seckilldemo.pojo.User;
 import com.example.seckilldemo.mapper.UserMapper;
 import com.example.seckilldemo.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.seckilldemo.utils.CookieUtil;
-import com.example.seckilldemo.utils.MD5Util;
-import com.example.seckilldemo.utils.UUIDUtil;
-import com.example.seckilldemo.utils.ValidatorUtil;
+import com.example.seckilldemo.utils.*;
 import com.example.seckilldemo.vo.LoginVo;
 import com.example.seckilldemo.vo.RespBean;
 import com.example.seckilldemo.vo.RespBeanEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 /**
  * <p>
@@ -34,7 +33,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private UserMapper userMapper;
-
+    @Autowired
+    private RedisTemplate redisTemplate;
     @Override
     public RespBean doLogin(LoginVo loginVo, HttpServletRequest request, HttpServletResponse response) {
         String mobile = loginVo.getMobile();
@@ -48,10 +48,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         //生成cookie
         String ticket = UUIDUtil.uuid();
-        request.getSession().setAttribute(ticket,user);
+        redisTemplate.opsForValue().set("user:" + ticket, Objects.requireNonNull(JsonUtil.object2JsonStr(user)));
+        // System.out.println(redisTemplate.getStringSerializer());
+        // request.getSession().setAttribute(ticket,user);
         CookieUtil.setCookie(request, response, "userTicket", ticket);
         return RespBean.success(ticket);
     }
+
+
+    @Override
+    public User getByUserTicket(String userTicket, HttpServletRequest request, HttpServletResponse response){
+        if(StringUtils.isEmpty(userTicket))return null;
+        String userJson = (String) redisTemplate.opsForValue().get("user:" + userTicket);
+        User user = JsonUtil.jsonStr2Object(userJson, User.class);
+        if(null != user){
+            CookieUtil.setCookie(request, response, "userTicket", userTicket);
+        }
+        return user;
+    }
+
 
     @Override
     public RespBean login(LoginVo loginVo) {
