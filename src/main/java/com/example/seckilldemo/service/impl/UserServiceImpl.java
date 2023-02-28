@@ -6,7 +6,9 @@ import com.example.seckilldemo.pojo.User;
 import com.example.seckilldemo.mapper.UserMapper;
 import com.example.seckilldemo.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.seckilldemo.utils.CookieUtil;
 import com.example.seckilldemo.utils.MD5Util;
+import com.example.seckilldemo.utils.UUIDUtil;
 import com.example.seckilldemo.utils.ValidatorUtil;
 import com.example.seckilldemo.vo.LoginVo;
 import com.example.seckilldemo.vo.RespBean;
@@ -35,7 +37,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public RespBean doLogin(LoginVo loginVo, HttpServletRequest request, HttpServletResponse response) {
-        return null;
+        String mobile = loginVo.getMobile();
+        String password = loginVo.getPassword();
+        User user = userMapper.selectById(mobile);
+        if(null == user){
+            throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
+        }
+        if(!MD5Util.formPassToDBPass(password, user.getSalt()).equals(user.getPassword())){
+            throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
+        }
+        //生成cookie
+        String ticket = UUIDUtil.uuid();
+        request.getSession().setAttribute(ticket,user);
+        CookieUtil.setCookie(request, response, "userTicket", ticket);
+        return RespBean.success(ticket);
     }
 
     @Override

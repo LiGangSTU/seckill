@@ -37,11 +37,23 @@ public class LoginController {
      * 登录
      * @return
      */
-    @RequestMapping("/doLogin")
+    @RequestMapping("/doLogin1")
     @ResponseBody
     public RespBean doLogin(@Valid LoginVo loginVo){
         log.info(loginVo.toString());
         // return iUserService.doLogin(loginVo, request, response);
         return iUserService.login(loginVo);
+    }
+
+    /**
+     * 登录
+     * @return
+     */
+    @RequestMapping("/doLogin")
+    @ResponseBody
+    public RespBean doLogin(@Valid LoginVo loginVo, HttpServletRequest request, HttpServletResponse response){
+        log.info(loginVo.toString());
+        // return iUserService.doLogin(loginVo, request, response);
+        return iUserService.doLogin(loginVo, request, response);
     }
 }
