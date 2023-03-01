@@ -27,16 +27,23 @@ import javax.servlet.http.HttpSession;
 @RequestMapping("/goods")
 public class GoodsController {
 
-    @Autowired
-    private IUserService iUserService;
-
+//    @Autowired
+//    private IUserService iUserService;
+//
+//
+//
+//    @RequestMapping(value = "/toList")
+//    public String toLogin(HttpServletResponse response, HttpServletRequest request, Model model,
+//                          @CookieValue("userTicket") String ticket){
+//        if(StringUtils.isEmpty(ticket))return "login";
+//        User user = iUserService.getByUserTicket(ticket, request, response);
+//        if(null == user)return "login";
+//        model.addAttribute("user", user);
+//        return "goodsList";
+//    }
 
     @RequestMapping(value = "/toList")
-    public String toLogin(HttpServletResponse response, HttpServletRequest request, Model model,
-                          @CookieValue("userTicket") String ticket){
-        if(StringUtils.isEmpty(ticket))return "login";
-        User user = iUserService.getByUserTicket(ticket, request, response);
-        if(null == user)return "login";
+    public String toLogin(Model model, User user){
         model.addAttribute("user", user);
         return "goodsList";
     }
