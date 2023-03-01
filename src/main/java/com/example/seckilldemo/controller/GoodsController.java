@@ -50,8 +50,9 @@ public class GoodsController {
 //    }
 
     @RequestMapping(value = "/toList")
-    public String toLogin(Model model, User user){
+    public String toList(Model model, User user){
         model.addAttribute("user", user);
+        System.out.println("List goods:"+user);
         model.addAttribute("goodsList", goodsService.findGoodsVo());
         System.out.println(goodsService.findGoodsVo());
         return "goodsList";

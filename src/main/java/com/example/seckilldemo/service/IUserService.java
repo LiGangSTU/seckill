@@ -29,5 +29,27 @@ public interface IUserService extends IService<User> {
 
     User getByUserTicket(String userTicket, HttpServletRequest request, HttpServletResponse response);
 
-    RespBean login(LoginVo loginVo);
+    /**
+     * 根据cookie获取用户
+     *
+     * @param userTicket
+     * @return com.example.seckilldemo.entity.TUser
+     * @author LC
+     * @operation add
+     * @date 1:50 下午 2022/3/3
+     **/
+    User getUserByCookie(String userTicket, HttpServletRequest request, HttpServletResponse response);
+
+    /**
+     * 更新密码
+     *
+     * @param userTicket
+     * @param id
+     * @param password
+     * @return com.example.seckilldemo.vo.RespBean
+     * @author LC
+     * @operation add
+     * @date 9:05 下午 2022/3/4
+     **/
+    RespBean updatePassword(String userTicket, String password, HttpServletRequest request, HttpServletResponse response);
 }

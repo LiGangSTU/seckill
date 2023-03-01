@@ -39,20 +39,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public RespBean doLogin(LoginVo loginVo, HttpServletRequest request, HttpServletResponse response) {
         String mobile = loginVo.getMobile();
         String password = loginVo.getPassword();
+        System.out.println(password);
+        //参数校验
+//        if (StringUtils.isEmpty(mobile) || StringUtils.isEmpty(password)) {
+//            throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
+//        }
+        //TODO 因为我懒测试的时候，把手机号码和密码长度校验去掉了，可以打开。页面和实体类我也注释了，记得打开
+//        if (!ValidatorUtil.isMobile(mobile)) {
+//            return RespBean.error(RespBeanEnum.MOBILE_ERROR);
+//        }
+
         User user = userMapper.selectById(mobile);
-        if(null == user){
+        if (user == null) {
             throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
         }
-        if(!MD5Util.formPassToDBPass(password, user.getSalt()).equals(user.getPassword())){
+//        System.out.println(MD5Util.formPassToDBPass(password, user.getSalt()));
+        //判断密码是否正确
+//        if (!MD5Util.formPassToDBPass(password, user.getSalt()).equals(user.getPassword())) {
+//            System.out.println(MD5Util.formPassToDBPass(password, user.getSalt()));
+//            throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
+//        }
+        if (!password.equals(user.getPassword())) {
+            //System.out.println(MD5Util.formPassToDBPass(password, user.getSalt()));
             throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
         }
-        //生成cookie
-        String ticket = UUIDUtil.uuid();
-        redisTemplate.opsForValue().set("user:" + ticket, Objects.requireNonNull(JsonUtil.object2JsonStr(user)));
-        // System.out.println(redisTemplate.getStringSerializer());
-        // request.getSession().setAttribute(ticket,user);
-        CookieUtil.setCookie(request, response, "userTicket", ticket);
-        return RespBean.success(ticket);
+        //生成Cookie
+        String userTicket = UUIDUtil.uuid();
+        //将用户信息存入redis
+        redisTemplate.opsForValue().set("user:" + userTicket, user);
+
+//        request.getSession().setAttribute(userTicket, user);
+        CookieUtil.setCookie(request, response, "userTicket", userTicket);
+        return RespBean.success(userTicket);
     }
 
 
@@ -67,22 +85,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return user;
     }
 
+    @Override
+    public User getUserByCookie(String userTicket, HttpServletRequest request, HttpServletResponse response) {
+        if (org.thymeleaf.util.StringUtils.isEmpty(userTicket)) {
+            return null;
+        }
+        User user = (User) redisTemplate.opsForValue().get("user:" + userTicket);
+        if (user != null) {
+            CookieUtil.setCookie(request, response, "userTicket", userTicket);
+        }
+        return user;
+    }
 
     @Override
-    public RespBean login(LoginVo loginVo) {
-        String mobile = loginVo.getMobile();
-        String password = loginVo.getPassword();
-//        if(StringUtils.isEmpty(mobile) || StringUtils.isEmpty(password)){return RespBean.error(RespBeanEnum.LOGIN_ERROR);}
-//        if(!ValidatorUtil.isMobile(mobile))return RespBean.error(RespBeanEnum.MOBILE_ERROR);
-
-        //根据手机号获取用户
-        User user = userMapper.selectById(mobile);
-        if(null == user){
-            throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
+    public RespBean updatePassword(String userTicket, String password, HttpServletRequest request, HttpServletResponse response) {
+        User user = getUserByCookie(userTicket, request, response);
+        if (user == null) {
+            throw new GlobalException(RespBeanEnum.MOBILE_NOT_EXIST);
         }
-        if(!MD5Util.formPassToDBPass(password, user.getSalt()).equals(user.getPassword())){
-           throw new GlobalException(RespBeanEnum.LOGIN_ERROR);
+        user.setPassword(MD5Util.inputPassToDBPass(password, user.getSalt()));
+        int result = userMapper.updateById(user);
+        if (1 == result) {
+            //删除Redis
+            redisTemplate.delete("user:" + userTicket);
+            return RespBean.success();
         }
-        return RespBean.success();
+        return RespBean.error(RespBeanEnum.PASSWORD_UPDATE_FAIL);
     }
+
+
 }

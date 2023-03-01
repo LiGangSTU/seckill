@@ -2,6 +2,8 @@ package com.example.seckilldemo.service;
 
 import com.example.seckilldemo.pojo.Order;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.example.seckilldemo.pojo.User;
+import com.example.seckilldemo.vo.GoodsVo;
 
 /**
  * <p>
@@ -12,5 +14,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2023-02-28
  */
 public interface IOrderService extends IService<Order> {
-
+    /**
+     * 秒杀
+     * @param user
+     * @param goodsVo
+     * @return
+     */
+    Order seckill(User user, GoodsVo goodsVo);
 }
