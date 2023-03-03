@@ -9,12 +9,15 @@ import com.example.seckilldemo.service.IOrderService;
 import com.example.seckilldemo.service.ISeckillOrderService;
 import com.example.seckilldemo.service.IUserService;
 import com.example.seckilldemo.vo.GoodsVo;
+import com.example.seckilldemo.vo.RespBean;
 import com.example.seckilldemo.vo.RespBeanEnum;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping(value = "/seckill")
@@ -29,8 +32,37 @@ public class SeckillController {
     @Autowired
     private ISeckillOrderService seckillOrderService;
 
-    @RequestMapping("/doSeckill")
-    public String doSeckill(Model model, User user, Long goodsId){
+    @RequestMapping(value = "/doSeckill", method = RequestMethod.POST)
+    @ResponseBody
+    public RespBean doSeckill( User user, Long goodsId){
+       try {
+           System.out.println(user);
+           if(user == null) {
+               System.out.println("用户获取失败");
+               return RespBean.success(RespBeanEnum.SESSION_ERROR);
+           }
+           GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
+           //判断库存
+           if(goodsVo.getStockCount() < 1){
+               //跳转到失败页面
+               return RespBean.error(RespBeanEnum.EMPTY_STOCK);
+           }
+           // 判断是否重复抢购
+           SeckillOrder seckillOrder = seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq(
+                   "goods_id", goodsId));
+           if(seckillOrder != null){
+               return RespBean.error(RespBeanEnum.REPEATE_ERROR);
+           }
+           Order order = orderService.seckill(user, goodsVo);
+           return RespBean.success(order);
+       }catch (Exception e){
+           e.printStackTrace();
+       }
+       return RespBean.error(RespBeanEnum.ERROR);
+    }
+
+    @RequestMapping("/doSeckill1")
+    public String doSeckill1(Model model, User user, Long goodsId){
         System.out.println(user);
         if(user == null) {
             System.out.println("用户获取失败");

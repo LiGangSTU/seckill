@@ -1,6 +1,8 @@
 package com.example.seckilldemo.controller;
 
 
+import com.example.seckilldemo.pojo.User;
+import com.example.seckilldemo.vo.RespBean;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.stereotype.Controller;
@@ -16,5 +18,9 @@ import org.springframework.stereotype.Controller;
 @Controller
 @RequestMapping("/user")
 public class UserController {
+    @RequestMapping("/info")
+    public RespBean info(User user){
+        return RespBean.success(user);
+    }
 
 }
