@@ -128,7 +128,7 @@ public class GoodsController {
         System.out.println(goodsService.findGoodsVo());
         return html;
     }
-    @RequestMapping(value = "/detail/{goodsId}")
+    @RequestMapping(value = "/detail/{goodsId}", method = RequestMethod.GET)
     @ResponseBody
     public RespBean toDetail(HttpServletRequest request, HttpServletResponse
             response, Model model, User user,

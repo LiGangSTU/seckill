@@ -36,7 +36,7 @@ public class SeckillController {
     @ResponseBody
     public RespBean doSeckill( User user, Long goodsId){
        try {
-           System.out.println(user);
+           System.out.println("doSeckill: "+user);
            if(user == null) {
                System.out.println("用户获取失败");
                return RespBean.success(RespBeanEnum.SESSION_ERROR);

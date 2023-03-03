@@ -1,6 +1,7 @@
 package com.example.seckilldemo.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.seckilldemo.exception.GlobalException;
 import com.example.seckilldemo.pojo.Order;
 import com.example.seckilldemo.mapper.OrderMapper;
 import com.example.seckilldemo.pojo.SeckillGoods;
@@ -12,6 +13,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.seckilldemo.service.ISeckillGoodsService;
 import com.example.seckilldemo.service.ISeckillOrderService;
 import com.example.seckilldemo.vo.GoodsVo;
+import com.example.seckilldemo.vo.OrderDetailVo;
+import com.example.seckilldemo.vo.RespBeanEnum;
 import com.sun.org.apache.xpath.internal.operations.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -71,5 +74,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderService.save(seckillOrder);
 
         return order;
+    }
+
+    @Override
+    public OrderDetailVo detail(Long orderId) {
+        if(null == orderId)throw new GlobalException(RespBeanEnum.ORDER_NOT_EXIST);
+        Order order = orderMapper.selectById(orderId);
+        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(order.getGoodsId());
+        OrderDetailVo orderDetailVo = new OrderDetailVo();
+        orderDetailVo.setOrder1(order);
+        orderDetailVo.setGoodsVo(goodsVo);
+        return orderDetailVo;
     }
 }
