@@ -1,6 +1,7 @@
 package com.example.seckilldemo.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.example.seckilldemo.exception.GlobalException;
 import com.example.seckilldemo.pojo.Order;
 import com.example.seckilldemo.mapper.OrderMapper;
@@ -12,15 +13,18 @@ import com.example.seckilldemo.service.IOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.seckilldemo.service.ISeckillGoodsService;
 import com.example.seckilldemo.service.ISeckillOrderService;
+import com.example.seckilldemo.utils.JsonUtil;
 import com.example.seckilldemo.vo.GoodsVo;
 import com.example.seckilldemo.vo.OrderDetailVo;
 import com.example.seckilldemo.vo.RespBeanEnum;
 import com.sun.org.apache.xpath.internal.operations.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * <p>
@@ -41,6 +45,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private OrderMapper orderMapper;
     @Autowired
     private ISeckillOrderService orderService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 秒杀
@@ -53,7 +59,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         //描述商品减库存
         SeckillGoods seckillGoods = seckillGoodsService.getOne(new QueryWrapper<SeckillGoods>().eq("goods_id", goodsVo.getId()));
         seckillGoods.setStockCount(seckillGoods.getStockCount()-1);
-        seckillGoodsService.updateById(seckillGoods);
+        boolean seckillGoodsResult = seckillGoodsService.update(new UpdateWrapper<SeckillGoods>()
+                .set("stock_count", seckillGoods.getStockCount())
+                .eq("id", seckillGoods.getId())
+                .gt("stock_count", 0));
+        if(seckillGoodsResult)return null;
+        //seckillGoodsService.updateById(seckillGoods);
         //生成订单
         Order order = new Order();
         order.setUserId(user.getId());
@@ -72,7 +83,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         seckillOrder.setUserId(user.getId());
         seckillOrder.setGoodsId(goodsVo.getId());
         orderService.save(seckillOrder);
-
+        redisTemplate.opsForValue().set("order:"+ user.getId()+":"+goodsVo.getId(),
+                Objects.requireNonNull(JsonUtil.object2JsonStr(seckillOrder)));
         return order;
     }
 

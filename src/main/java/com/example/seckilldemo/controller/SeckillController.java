@@ -1,6 +1,7 @@
 package com.example.seckilldemo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.example.seckilldemo.pojo.Order;
 import com.example.seckilldemo.pojo.SeckillOrder;
 import com.example.seckilldemo.pojo.User;
@@ -13,6 +14,7 @@ import com.example.seckilldemo.vo.RespBean;
 import com.example.seckilldemo.vo.RespBeanEnum;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +33,8 @@ public class SeckillController {
     private IOrderService orderService;
     @Autowired
     private ISeckillOrderService seckillOrderService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @RequestMapping(value = "/doSeckill", method = RequestMethod.POST)
     @ResponseBody
@@ -48,11 +52,12 @@ public class SeckillController {
                return RespBean.error(RespBeanEnum.EMPTY_STOCK);
            }
            // 判断是否重复抢购
-           SeckillOrder seckillOrder = seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq(
-                   "goods_id", goodsId));
-           if(seckillOrder != null){
-               return RespBean.error(RespBeanEnum.REPEATE_ERROR);
-           }
+//           SeckillOrder seckillOrder = seckillOrderService.getOne(new QueryWrapper<SeckillOrder>()
+//                   .eq("user_id", user.getId())
+//                   .eq("goods_id", goodsId));
+           //改为从redis中读取
+           String seckillOrderJson = (String) redisTemplate.opsForValue().get("order:"+user.getId()+":"+goodsId);
+           if(!StringUtils.isEmpty(seckillOrderJson))return RespBean.error(RespBeanEnum.REPEATE_ERROR);
            Order order = orderService.seckill(user, goodsVo);
            return RespBean.success(order);
        }catch (Exception e){
