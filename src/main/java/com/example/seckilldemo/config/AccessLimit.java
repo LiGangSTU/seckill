@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author: LC
+ * @author: LG
  * @date 2022/3/9 4:25 下午
  * @ClassName: AccessLimit
  */

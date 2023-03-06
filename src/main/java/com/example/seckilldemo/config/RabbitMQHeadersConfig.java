@@ -3,7 +3,7 @@ package com.example.seckilldemo.config;
 /**
  * RabbitMQ配置类-Headers配置类
  *
- * @author: LC
+ * @author: LG
  * @date 2022/3/8 5:39 下午
  * @ClassName: RabbitMQHeadersConfig
  */

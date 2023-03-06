@@ -21,7 +21,7 @@ import java.io.PrintWriter;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author: LC
+ * @author: LG
  * @date 2022/3/9 4:27 下午
  * @ClassName: AccessLimitInterceptor
  */

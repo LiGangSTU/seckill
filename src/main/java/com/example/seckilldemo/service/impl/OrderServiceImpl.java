@@ -21,6 +21,7 @@ import com.sun.org.apache.xpath.internal.operations.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -56,6 +57,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      */
     @Override
     public Order seckill(User user, GoodsVo goodsVo) {
+        ValueOperations valueOperations = redisTemplate.opsForValue();
         //描述商品减库存
         SeckillGoods seckillGoods = seckillGoodsService.getOne(new QueryWrapper<SeckillGoods>().eq("goods_id", goodsVo.getId()));
         seckillGoods.setStockCount(seckillGoods.getStockCount()-1);
@@ -63,7 +65,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 .set("stock_count", seckillGoods.getStockCount())
                 .eq("id", seckillGoods.getId())
                 .gt("stock_count", 0));
-        if(seckillGoodsResult)return null;
+        if(seckillGoodsResult)
+        {
+            //增加预减判断
+            valueOperations.set("isStockEmpty:"+goodsVo.getId(), "0");
+            return null;
+        }
         //seckillGoodsService.updateById(seckillGoods);
         //生成订单
         Order order = new Order();

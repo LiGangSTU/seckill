@@ -3,7 +3,7 @@ package com.example.seckilldemo.config;
 import com.example.seckilldemo.pojo.User;
 
 /**
- * @author: LC
+ * @author: LG
  * @date 2022/3/9 4:49 下午
  * @ClassName: UserContext
  */

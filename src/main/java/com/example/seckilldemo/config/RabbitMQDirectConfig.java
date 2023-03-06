@@ -4,7 +4,7 @@ package com.example.seckilldemo.config;
 /**
  * RabbitMQ配置类-Direct模式
  *
- * @author: LC
+ * @author: LG
  * @date 2022/3/8 4:56 下午
  * @ClassName: RabbitMQDirectConfig
  */

@@ -1,9 +1,10 @@
 package com.example.seckilldemo.rabbitmq;
 
-import com.example.seckilldemo.entity.TSeckillOrder;
-import com.example.seckilldemo.entity.TUser;
-import com.example.seckilldemo.service.ITGoodsService;
-import com.example.seckilldemo.service.ITOrderService;
+
+import com.example.seckilldemo.pojo.SeckillOrder;
+import com.example.seckilldemo.pojo.User;
+import com.example.seckilldemo.service.IGoodsService;
+import com.example.seckilldemo.service.IOrderService;
 import com.example.seckilldemo.utils.JsonUtil;
 import com.example.seckilldemo.vo.GoodsVo;
 import com.example.seckilldemo.vo.SeckillMessage;
@@ -13,23 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-/**
- * 消息消费者
- *
- * @author: LC
- * @date 2022/3/7 7:44 下午
- * @ClassName: MQReceiver
- */
+
 @Service
 @Slf4j
 public class MQReceiver {
 
     @Autowired
-    private ITGoodsService itGoodsServicel;
+    private IGoodsService itGoodsServicel;
     @Autowired
     private RedisTemplate redisTemplate;
     @Autowired
-    private ITOrderService itOrderService;
+    private IOrderService itOrderService;
 
 
     /**
@@ -46,18 +41,18 @@ public class MQReceiver {
         log.info("接收消息：" + message);
         SeckillMessage seckillMessage = JsonUtil.jsonStr2Object(message, SeckillMessage.class);
         Long goodsId = seckillMessage.getGoodsId();
-        TUser user = seckillMessage.getTUser();
-        GoodsVo goodsVo = itGoodsServicel.findGoodsVobyGoodsId(goodsId);
+        User user = seckillMessage.getTUser();
+        GoodsVo goodsVo = itGoodsServicel.findGoodsVoByGoodsId(goodsId);
         if (goodsVo.getStockCount() < 1) {
             return;
         }
         //判断是否重复抢购
-        TSeckillOrder tSeckillOrder = (TSeckillOrder) redisTemplate.opsForValue().get("order:" + user.getId() + ":" + goodsId);
+        SeckillOrder tSeckillOrder = (SeckillOrder) redisTemplate.opsForValue().get("order:" + user.getId() + ":" + goodsId);
         if (tSeckillOrder != null) {
             return;
         }
         //下单操作
-        itOrderService.secKill(user, goodsVo);
+        itOrderService.seckill(user, goodsVo);
 
     }
 

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 /**
  * 消息发送者
  *
- * @author: LC
+ * @author: LG
  * @date 2022/3/7 7:42 下午
  * @ClassName: MQSender
  */
